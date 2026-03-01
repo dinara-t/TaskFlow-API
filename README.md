@@ -7,12 +7,13 @@ The API is designed to serve as the backend for a full-stack Todo application an
 
 ## Technology Stack
 
-- Java 17
+- Java
 - Spring Boot
-- Spring Data JPA (Hibernate)
+- Spring Data JPA
+- Hibernate
 - MySQL
 - Maven
-- Bean Validation (Jakarta Validation)
+- Jakarta Validation
 
 ## Project Architecture
 
@@ -39,9 +40,10 @@ The project also includes:
 
 - Create category
 - Update category
-- Delete category (hard delete with cascade)
+- Delete category
 - Retrieve all categories
 - Unique category name validation
+  Categories are stored in a separate table and linked to todos via @ManyToOne.
 
 ### Todos
 
@@ -49,6 +51,7 @@ The project also includes:
 - Update todo (partial updates supported)
 - Archive todo (soft delete)
 - Retrieve all active todos
+- Toggle completion
 - Filter todos by category
 - Sort todos (createdAt, title, completed)
 - Excludes archived todos from standard queries
@@ -80,36 +83,25 @@ GET /todos Retrieve todos
 GET /todos?category={id} Filter by category
 POST /todos Create todo
 PUT /todos/{id} Update todo
+POST /api/todos/{id}/duplicate Duplicate todo
 
-## Request Examples
+## Running Locally
 
-### Create Category
+1. Create .env file based on .env.example
 
-{
-"name": "Work"
-}
+2. Ensure MySQL is running
 
-### Create Todo
+3. Start the application:
 
-{
-"title": "Finish Spring project",
-"completed": false,
-"categoryId": 1
-}
+```bash
+mvn spring-boot:run
+```
 
-## Configuration
+API base path:
 
-The application uses environment variables loaded via .env:
-
-DB_HOST=
-DB_PORT=
-DB_NAME=
-DB_USER=
-DB_PASSWORD=
-JWT_SECRET=
-JWT_TOKEN_EXPIRY=
-
-Database schema is automatically created/updated in development mode.
+```bash
+http://localhost:8080/api
+```
 
 ## Learning Experience
 

@@ -1,5 +1,6 @@
 package com.example.todo.todo.entities;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import com.example.todo.category.entities.Category;
@@ -10,6 +11,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -24,6 +27,13 @@ public class Todo extends BaseEntity implements Timestampable {
     private boolean completed = false;
 
     private boolean isArchived = false;
+
+    private LocalDate dueDate;
+
+    @Enumerated(EnumType.STRING)
+    private Urgency urgency = Urgency.MEDIUM;
+
+    private Integer recurrenceDays;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "category_id", nullable = false)
@@ -58,6 +68,30 @@ public class Todo extends BaseEntity implements Timestampable {
 
     public void setArchived(boolean archived) {
         isArchived = archived;
+    }
+
+    public LocalDate getDueDate() {
+        return dueDate;
+    }
+
+    public void setDueDate(LocalDate dueDate) {
+        this.dueDate = dueDate;
+    }
+
+    public Urgency getUrgency() {
+        return urgency;
+    }
+
+    public void setUrgency(Urgency urgency) {
+        this.urgency = urgency;
+    }
+
+    public Integer getRecurrenceDays() {
+        return recurrenceDays;
+    }
+
+    public void setRecurrenceDays(Integer recurrenceDays) {
+        this.recurrenceDays = recurrenceDays;
     }
 
     public Category getCategory() {
