@@ -5,6 +5,8 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Set;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Service;
 import com.example.todo.category.CategoryRepository;
 import com.example.todo.category.dtos.CategoryResponse;
 import com.example.todo.category.entities.Category;
+import com.example.todo.common.dto.PageResponse;
 import com.example.todo.common.dto.SortOrder;
 import com.example.todo.common.exception.BadRequestException;
 import com.example.todo.common.exception.NotFoundException;
@@ -44,66 +47,46 @@ public class TodoService {
     }
 
     public List<TodoResponse> getTodos(TodoQueryParams params, Long categoryId) {
-        SortOrder order = params == null ? SortOrder.DESC : params.orderOrDefault();
-
-        String sortBy = (params == null || params.sortBy() == null || params.sortBy().isBlank())
-                ? "createdAt"
-                : params.sortBy().trim();
-
-        if (!ALLOWED_SORT_FIELDS.contains(sortBy)) {
-            sortBy = "createdAt";
-        }
-
-        Sort sort = order == SortOrder.ASC
-                ? Sort.by(sortBy).ascending()
-                : Sort.by(sortBy).descending();
-
-        Specification<Todo> spec = (root, query, cb) -> cb.isFalse(root.get("isArchived"));
-
-        if (categoryId != null) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("category").get("id"), categoryId));
-        }
-
-        if (params != null) {
-            if (params.completed() != null) {
-                boolean completed = Boolean.TRUE.equals(params.completed());
-                spec = spec.and((root, query, cb) -> completed
-                        ? cb.isTrue(root.get("completed"))
-                        : cb.isFalse(root.get("completed")));
-            }
-
-            if (params.urgency() != null) {
-                Urgency u = params.urgency();
-                spec = spec.and((root, query, cb) -> cb.equal(root.get("urgency"), u));
-            }
-
-            if (params.dueBefore() != null) {
-                LocalDate d = params.dueBefore();
-                spec = spec.and((root, query, cb) -> cb.and(
-                        cb.isNotNull(root.get("dueDate")),
-                        cb.lessThanOrEqualTo(root.get("dueDate"), d)
-                ));
-            }
-
-            if (params.dueAfter() != null) {
-                LocalDate d = params.dueAfter();
-                spec = spec.and((root, query, cb) -> cb.and(
-                        cb.isNotNull(root.get("dueDate")),
-                        cb.greaterThanOrEqualTo(root.get("dueDate"), d)
-                ));
-            }
-
-            if (Boolean.TRUE.equals(params.overdue())) {
-                LocalDate today = LocalDate.now(ZoneOffset.UTC);
-                spec = spec.and((root, query, cb) -> cb.and(
-                        cb.isNotNull(root.get("dueDate")),
-                        cb.lessThan(root.get("dueDate"), today),
-                        cb.isFalse(root.get("completed"))
-                ));
-            }
-        }
-
+        Sort sort = buildSort(params);
+        Specification<Todo> spec = buildSpec(params, categoryId);
         return todoRepository.findAll(spec, sort).stream().map(this::toResponse).toList();
+    }
+
+    public PageResponse<TodoResponse> getTodosPaged(TodoQueryParams params, Long categoryId, Integer page, Integer size) {
+        int safePage = page == null ? 0 : page;
+        int safeSize = size == null ? 20 : size;
+
+        ValidationErrors errors = new ValidationErrors();
+        if (safePage < 0) {
+            errors.addError("page", "Page must be 0 or greater");
+        }
+        if (safeSize <= 0) {
+            errors.addError("size", "Size must be greater than 0");
+        }
+        if (safeSize > 200) {
+            errors.addError("size", "Size must be 200 or less");
+        }
+        if (errors.hasErrors()) {
+            throw BadRequestException.from(errors);
+        }
+
+        Sort sort = buildSort(params);
+        PageRequest pageable = PageRequest.of(safePage, safeSize, sort);
+
+        Specification<Todo> spec = buildSpec(params, categoryId);
+        Page<Todo> todoPage = todoRepository.findAll(spec, pageable);
+
+        List<TodoResponse> items = todoPage.getContent().stream().map(this::toResponse).toList();
+
+        return new PageResponse<>(
+                items,
+                todoPage.getNumber(),
+                todoPage.getSize(),
+                todoPage.getTotalElements(),
+                todoPage.getTotalPages(),
+                todoPage.hasNext(),
+                todoPage.hasPrevious()
+        );
     }
 
     public TodoResponse createTodo(CreateTodoDto dto) {
@@ -246,11 +229,72 @@ public class TodoService {
         return toResponse(saved);
     }
 
-    private TodoResponse toResponse(Todo todo) {
-        if (todo == null) {
-            return null;
+    private Sort buildSort(TodoQueryParams params) {
+        SortOrder order = params == null ? SortOrder.DESC : params.orderOrDefault();
+
+        String sortBy = (params == null || params.sortBy() == null || params.sortBy().isBlank())
+                ? "createdAt"
+                : params.sortBy().trim();
+
+        if (!ALLOWED_SORT_FIELDS.contains(sortBy)) {
+            sortBy = "createdAt";
         }
 
+        return order == SortOrder.ASC
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+    }
+
+    private Specification<Todo> buildSpec(TodoQueryParams params, Long categoryId) {
+        Specification<Todo> spec = (root, query, cb) -> cb.isFalse(root.get("isArchived"));
+
+        if (categoryId != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("category").get("id"), categoryId));
+        }
+
+        if (params == null) {
+            return spec;
+        }
+
+        if (params.completed() != null) {
+            boolean completed = Boolean.TRUE.equals(params.completed());
+            spec = spec.and((root, query, cb) -> completed ? cb.isTrue(root.get("completed")) : cb.isFalse(root.get("completed")));
+        }
+
+        if (params.urgency() != null) {
+            Urgency u = params.urgency();
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("urgency"), u));
+        }
+
+        if (params.dueBefore() != null) {
+            LocalDate d = params.dueBefore();
+            spec = spec.and((root, query, cb) -> cb.and(
+                    cb.isNotNull(root.get("dueDate")),
+                    cb.lessThanOrEqualTo(root.get("dueDate"), d)
+            ));
+        }
+
+        if (params.dueAfter() != null) {
+            LocalDate d = params.dueAfter();
+            spec = spec.and((root, query, cb) -> cb.and(
+                    cb.isNotNull(root.get("dueDate")),
+                    cb.greaterThanOrEqualTo(root.get("dueDate"), d)
+            ));
+        }
+
+        if (Boolean.TRUE.equals(params.overdue())) {
+            LocalDate today = LocalDate.now(ZoneOffset.UTC);
+            spec = spec.and((root, query, cb) -> cb.and(
+                    cb.isNotNull(root.get("dueDate")),
+                    cb.lessThan(root.get("dueDate"), today),
+                    cb.isFalse(root.get("completed"))
+            ));
+        }
+
+        return spec;
+    }
+
+    private TodoResponse toResponse(Todo todo) {
         LocalDate today = LocalDate.now(ZoneOffset.UTC);
         boolean overdue = todo.getDueDate() != null && !todo.isCompleted() && todo.getDueDate().isBefore(today);
 

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.todo.common.dto.PageResponse;
 import com.example.todo.todo.dtos.CreateTodoDto;
 import com.example.todo.todo.dtos.TodoQueryParams;
 import com.example.todo.todo.dtos.TodoResponse;
@@ -38,6 +39,16 @@ public class TodoController {
             @RequestParam(required = false) Long category
     ) {
         return todoService.getTodos(params, category);
+    }
+
+    @GetMapping("/paged")
+    public PageResponse<TodoResponse> getTodosPaged(
+            @ModelAttribute TodoQueryParams params,
+            @RequestParam(required = false) Long category,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size
+    ) {
+        return todoService.getTodosPaged(params, category, page, size);
     }
 
     @PostMapping

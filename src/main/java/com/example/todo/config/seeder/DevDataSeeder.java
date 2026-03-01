@@ -22,13 +22,13 @@ public class DevDataSeeder implements CommandLineRunner {
     @Override
     public void run(String... args) {
         if (categoryFactory.repoEmpty()) {
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 10; i++) {
                 categoryFactory.create();
             }
         }
 
         if (todoFactory.repoEmpty()) {
-            for (int i = 0; i < 10; i++) {
+            for (int i = 0; i < 100; i++) {
                 todoFactory.create();
             }
         }

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import com.example.todo.category.dtos.CategoryResponse;
 import com.example.todo.category.dtos.CreateCategoryDto;
 import com.example.todo.category.dtos.UpdateCategoryDto;
+import com.example.todo.common.dto.PageResponse;
 
 import jakarta.validation.Valid;
 
@@ -25,6 +26,14 @@ public class CategoryController {
     @GetMapping
     public List<CategoryResponse> getCategories() {
         return categoryService.getCategories();
+    }
+
+    @GetMapping("/paged")
+    public PageResponse<CategoryResponse> getCategoriesPaged(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size
+    ) {
+        return categoryService.getCategoriesPaged(page, size);
     }
 
     @PostMapping
