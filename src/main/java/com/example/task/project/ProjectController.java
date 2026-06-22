@@ -14,7 +14,6 @@ import com.example.task.project.dtos.UpdateProjectDto;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/projects")
 public class ProjectController {
 
     private final ProjectService projectService;
@@ -23,31 +22,42 @@ public class ProjectController {
         this.projectService = projectService;
     }
 
-    @GetMapping
-    public List<ProjectResponse> getProjects() {
-        return projectService.getProjects();
+    @GetMapping("/projects")
+    public List<ProjectResponse> getProjects(@RequestParam(required = false) Long teamId) {
+        return projectService.getProjects(teamId);
     }
 
-    @GetMapping("/paged")
+    @GetMapping("/teams/{teamId}/projects")
+    public List<ProjectResponse> getProjectsForTeam(@PathVariable Long teamId) {
+        return projectService.getProjects(teamId);
+    }
+
+    @GetMapping("/projects/paged")
     public PageResponse<ProjectResponse> getProjectsPaged(
+            @RequestParam(required = false) Long teamId,
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size
     ) {
-        return projectService.getProjectsPaged(page, size);
+        return projectService.getProjectsPaged(teamId, page, size);
     }
 
-    @PostMapping
+    @GetMapping("/projects/{id}")
+    public ProjectResponse getProject(@PathVariable Long id) {
+        return projectService.getProject(id);
+    }
+
+    @PostMapping("/projects")
     public ResponseEntity<ProjectResponse> createProject(@Valid @RequestBody CreateProjectDto dto) {
         ProjectResponse created = projectService.createProject(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/projects/{id}")
     public ProjectResponse updateProject(@PathVariable Long id, @Valid @RequestBody UpdateProjectDto dto) {
         return projectService.updateProject(id, dto);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/projects/{id}")
     public ResponseEntity<Void> deleteProject(@PathVariable Long id) {
         projectService.deleteProject(id);
         return ResponseEntity.noContent().build();

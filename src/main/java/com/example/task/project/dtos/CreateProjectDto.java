@@ -1,6 +1,7 @@
 package com.example.task.project.dtos;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record CreateProjectDto(
@@ -9,6 +10,9 @@ public record CreateProjectDto(
         String name,
 
         @Size(max = 500, message = "Description must be 500 characters or less")
-        String description
+        String description,
+
+        @NotNull(message = "Team ID is required")
+        Long teamId
 ) {
 }

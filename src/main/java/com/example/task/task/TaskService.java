@@ -382,14 +382,16 @@ public class TaskService {
                 task.getCategory().getName()
         );
 
-        ProjectResponse project = null;
-        if (task.getProject() != null) {
-            project = new ProjectResponse(
-                    task.getProject().getId(),
-                    task.getProject().getName(),
-                    task.getProject().getDescription()
-            );
-        }
+ProjectResponse project = null;
+if (task.getProject() != null) {
+    project = new ProjectResponse(
+            task.getProject().getId(),
+            task.getProject().getName(),
+            task.getProject().getDescription(),
+            task.getProject().getTeam() == null ? null : task.getProject().getTeam().getId(),
+            task.getProject().getTeam() == null ? null : task.getProject().getTeam().getName()
+    );
+}
 
         return new TaskResponse(
                 task.getId(),
