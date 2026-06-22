@@ -15,14 +15,22 @@ import com.example.task.common.exception.BadRequestException;
 import com.example.task.common.exception.NotFoundException;
 import com.example.task.common.serviceErrors.NotFoundError;
 import com.example.task.common.serviceErrors.ValidationErrors;
+import com.example.task.activitylog.ActivityLogService;
+import com.example.task.activitylog.entities.ActivityAction;
+import com.example.task.activitylog.entities.ActivityEntityType;
 
 @Service
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+private final ActivityLogService activityLogService;
 
-    public CategoryService(CategoryRepository categoryRepository) {
+    public CategoryService(
+        CategoryRepository categoryRepository,
+        ActivityLogService activityLogService
+    ) {
         this.categoryRepository = categoryRepository;
+        this.activityLogService = activityLogService;
     }
 
     public List<CategoryResponse> getCategories() {
@@ -86,6 +94,12 @@ public class CategoryService {
         category.setName(dto.name().trim());
 
         Category saved = categoryRepository.save(category);
+        activityLogService.log(
+        ActivityAction.CATEGORY_CREATED,
+        ActivityEntityType.CATEGORY,
+        saved.getId(),
+        "Category created: " + saved.getName()
+);
 
         return new CategoryResponse(saved.getId(), saved.getName());
     }
@@ -119,5 +133,14 @@ public class CategoryService {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(new NotFoundError("Category", id)));
         categoryRepository.delete(category);
+        String categoryName = category.getName();
+categoryRepository.delete(category);
+
+activityLogService.log(
+        ActivityAction.CATEGORY_DELETED,
+        ActivityEntityType.CATEGORY,
+        id,
+        "Category deleted: " + categoryName
+);
     }
 }

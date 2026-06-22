@@ -21,7 +21,8 @@ public class SecurityConfig {
                                 "/auth/**",
                                 "/tasks/**",
                                 "/categories/**",
-                                "/projects/**"
+                                "/projects/**",
+                                 "/activity-logs/**"
                         ).permitAll()
                         .anyRequest().permitAll()
                 );

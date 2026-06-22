@@ -10,6 +10,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import com.example.task.activitylog.ActivityLogService;
+import com.example.task.activitylog.entities.ActivityAction;
+import com.example.task.activitylog.entities.ActivityEntityType;
 import com.example.task.category.CategoryRepository;
 import com.example.task.category.dtos.CategoryResponse;
 import com.example.task.category.entities.Category;
@@ -42,15 +45,18 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final CategoryRepository categoryRepository;
     private final ProjectRepository projectRepository;
+    private final ActivityLogService activityLogService;
 
     public TaskService(
             TaskRepository taskRepository,
             CategoryRepository categoryRepository,
-            ProjectRepository projectRepository
+            ProjectRepository projectRepository,
+            ActivityLogService activityLogService
     ) {
         this.taskRepository = taskRepository;
         this.categoryRepository = categoryRepository;
         this.projectRepository = projectRepository;
+        this.activityLogService = activityLogService;
     }
 
     public List<TaskResponse> getTasks(TaskQueryParams params, Long categoryId, Long projectId) {
@@ -160,6 +166,13 @@ public class TaskService {
 
         Task saved = taskRepository.save(task);
 
+        activityLogService.log(
+                ActivityAction.TASK_CREATED,
+                ActivityEntityType.TASK,
+                saved.getId(),
+                "Task created: " + saved.getTitle()
+        );
+
         return toResponse(saved);
     }
 
@@ -204,14 +217,12 @@ public class TaskService {
         if (dto.categoryId() != null) {
             Category category = categoryRepository.findById(dto.categoryId())
                     .orElseThrow(() -> new NotFoundException(new NotFoundError("Category", dto.categoryId())));
-
             task.setCategory(category);
         }
 
         if (dto.projectId() != null) {
             Project project = projectRepository.findById(dto.projectId())
                     .orElseThrow(() -> new NotFoundException(new NotFoundError("Project", dto.projectId())));
-
             task.setProject(project);
         }
 
@@ -229,6 +240,13 @@ public class TaskService {
 
         Task saved = taskRepository.save(task);
 
+        activityLogService.log(
+                ActivityAction.TASK_UPDATED,
+                ActivityEntityType.TASK,
+                saved.getId(),
+                "Task updated: " + saved.getTitle()
+        );
+
         return toResponse(saved);
     }
 
@@ -238,6 +256,13 @@ public class TaskService {
 
         task.setArchived(true);
         taskRepository.save(task);
+
+        activityLogService.log(
+                ActivityAction.TASK_ARCHIVED,
+                ActivityEntityType.TASK,
+                task.getId(),
+                "Task archived: " + task.getTitle()
+        );
     }
 
     public TaskResponse duplicateTask(Long id, Integer shiftDays) {
@@ -260,6 +285,13 @@ public class TaskService {
         }
 
         Task saved = taskRepository.save(duplicate);
+
+        activityLogService.log(
+                ActivityAction.TASK_DUPLICATED,
+                ActivityEntityType.TASK,
+                saved.getId(),
+                "Task duplicated from task #" + original.getId()
+        );
 
         return toResponse(saved);
     }

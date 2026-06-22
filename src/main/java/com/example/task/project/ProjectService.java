@@ -16,13 +16,21 @@ import com.example.task.project.dtos.ProjectResponse;
 import com.example.task.project.dtos.UpdateProjectDto;
 import com.example.task.project.entities.Project;
 
+import com.example.task.activitylog.ActivityLogService;
+import com.example.task.activitylog.entities.ActivityAction;
+import com.example.task.activitylog.entities.ActivityEntityType;
+
 @Service
 public class ProjectService {
 
     private final ProjectRepository projectRepository;
+    private final ActivityLogService activityLogService;
 
-    public ProjectService(ProjectRepository projectRepository) {
+    public ProjectService(
+        ProjectRepository projectRepository,
+    ActivityLogService activityLogService) {
         this.projectRepository = projectRepository;
+        this.activityLogService= activityLogService;
     }
 
     public List<ProjectResponse> getProjects() {
@@ -92,7 +100,12 @@ public class ProjectService {
         project.setDescription(cleanDescription(dto.description()));
 
         Project saved = projectRepository.save(project);
-
+activityLogService.log(
+        ActivityAction.PROJECT_CREATED,
+        ActivityEntityType.PROJECT,
+        saved.getId(),
+        "Project created: " + saved.getName()
+);
         return toResponse(saved);
     }
 
@@ -120,6 +133,13 @@ public class ProjectService {
 
         Project saved = projectRepository.save(project);
 
+activityLogService.log(
+        ActivityAction.PROJECT_UPDATED,
+        ActivityEntityType.PROJECT,
+        saved.getId(),
+        "Project updated: " + saved.getName()
+);
+
         return toResponse(saved);
     }
 
@@ -128,6 +148,12 @@ public class ProjectService {
                 .orElseThrow(() -> new NotFoundException(new NotFoundError("Project", id)));
 
         projectRepository.delete(project);
+        activityLogService.log(
+        ActivityAction.PROJECT_DELETED,
+        ActivityEntityType.PROJECT,
+        id,
+        "Project deleted: " + project.getName()
+);
     }
 
     private String cleanDescription(String description) {

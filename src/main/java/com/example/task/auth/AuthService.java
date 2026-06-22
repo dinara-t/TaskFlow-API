@@ -15,6 +15,9 @@ import com.example.task.security.JwtService;
 import com.example.task.user.UserRepository;
 import com.example.task.user.entities.Role;
 import com.example.task.user.entities.User;
+import com.example.task.activitylog.ActivityLogService;
+import com.example.task.activitylog.entities.ActivityAction;
+import com.example.task.activitylog.entities.ActivityEntityType;
 
 @Service
 public class AuthService {
@@ -22,15 +25,19 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final ActivityLogService activityLogService;
 
     public AuthService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
-            JwtService jwtService
+            JwtService jwtService,
+            ActivityLogService activityLogService
+
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.activityLogService = activityLogService;
     }
 
     public AuthResponse register(RegisterRequest request) {
@@ -60,11 +67,17 @@ public class AuthService {
         user.setRole(Role.MEMBER);
 
         User saved = userRepository.save(user);
-
+     activityLogService.log(
+        ActivityAction.USER_REGISTERED,
+        ActivityEntityType.USER,
+        saved.getId(),
+        "User registered: " + saved.getEmail()
+);
         return new AuthResponse(
                 jwtService.generateToken(saved),
                 UserResponse.from(saved)
         );
+   
     }
 
     public AuthResponse login(LoginRequest request) {
