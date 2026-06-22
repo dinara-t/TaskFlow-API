@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 
 import com.example.task.user.entities.User;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
@@ -39,5 +41,33 @@ public class JwtService {
                 .expiration(expiryDate)
                 .signWith(secretKey)
                 .compact();
+    }
+
+    public String extractEmail(String token) {
+        return extractAllClaims(token).getSubject();
+    }
+
+    public String extractRole(String token) {
+        Object role = extractAllClaims(token).get("role");
+        return role == null ? null : role.toString();
+    }
+
+    public boolean isTokenValid(String token) {
+        try {
+            Claims claims = extractAllClaims(token);
+            Date expiration = claims.getExpiration();
+
+            return expiration != null && expiration.after(new Date());
+        } catch (JwtException | IllegalArgumentException ex) {
+            return false;
+        }
+    }
+
+    private Claims extractAllClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 }

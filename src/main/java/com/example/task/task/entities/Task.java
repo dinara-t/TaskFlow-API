@@ -18,6 +18,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
+import java.util.ArrayList;
+import java.util.List;
+import com.example.task.comment.entities.Comment;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.OneToMany;
+
 @Entity
 @Table(name = "tasks")
 @EntityListeners(TimeStampEntityListener.class)
@@ -40,7 +46,8 @@ public class Task extends BaseEntity implements Timestampable {
     @JoinColumn(name = "category_id", nullable = false)
     @JsonIgnoreProperties("tasks")
     private Category category;
-
+@OneToMany(mappedBy = "task", cascade = CascadeType.REMOVE, orphanRemoval = true)
+private List<Comment> comments = new ArrayList<>();
     @ManyToOne(optional = true)
     @JoinColumn(name = "project_id", nullable = true)
     @JsonIgnoreProperties("tasks")
@@ -132,4 +139,11 @@ public class Task extends BaseEntity implements Timestampable {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+    public List<Comment> getComments() {
+    return comments;
+}
+
+public void setComments(List<Comment> comments) {
+    this.comments = comments;
+}
 }

@@ -4,5 +4,6 @@ public enum ActivityEntityType {
     USER,
     CATEGORY,
     PROJECT,
-    TASK
+    TASK,
+    COMMENT
 }
