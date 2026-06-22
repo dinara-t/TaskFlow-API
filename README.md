@@ -1,9 +1,9 @@
-# Todos API
+# TasksFlow API
 
-A RESTful backend API built with Spring Boot and MySQL for managing todos and categories.
+A RESTful backend API built with Spring Boot and MySQL for managing tasks and categories.
 This project demonstrates layered architecture, data persistence, soft deletion logic, filtering, sorting, and structured error handling.
 
-The API is designed to serve as the backend for a full-stack Todo application and follows clean separation of concerns between controllers, services, repositories, DTOs, and entities.
+The API is designed to serve as the backend for a full-stack task application and follows clean separation of concerns between controllers, services, repositories, DTOs, and entities.
 
 ## Technology Stack
 
@@ -32,7 +32,7 @@ The project also includes:
 - Global exception handling
 - Custom error response structure
 - Timestamp handling via entity listeners
-- Soft delete implementation for todos
+- Soft delete implementation for tasks
 
 ## Features
 
@@ -43,18 +43,18 @@ The project also includes:
 - Delete category
 - Retrieve all categories
 - Unique category name validation
-  Categories are stored in a separate table and linked to todos via @ManyToOne.
+  Categories are stored in a separate table and linked to tasks via @ManyToOne.
 
-### Todos
+### tasks
 
-- Create todo
-- Update todo (partial updates supported)
-- Archive todo (soft delete)
-- Retrieve all active todos
+- Create task
+- Update task (partial updates supported)
+- Archive task (soft delete)
+- Retrieve all active tasks
 - Toggle completion
-- Filter todos by category
-- Sort todos (createdAt, title, completed)
-- Excludes archived todos from standard queries
+- Filter tasks by category
+- Sort tasks (createdAt, title, completed)
+- Excludes archived tasks from standard queries
 
 ### Additional Behaviour
 
@@ -76,14 +76,14 @@ POST /categories Create new category
 PUT /categories/{id} Update category
 DELETE /categories/{id} Delete category
 
-### Todos
+### tasks
 
 Method Endpoint Description
-GET /todos Retrieve todos
-GET /todos?category={id} Filter by category
-POST /todos Create todo
-PUT /todos/{id} Update todo
-POST /api/todos/{id}/duplicate Duplicate todo
+GET /tasks Retrieve tasks
+GET /tasks?category={id} Filter by category
+POST /tasks Create task
+PUT /tasks/{id} Update task
+POST /api/tasks/{id}/duplicate Duplicate task
 
 ## Running Locally
 
