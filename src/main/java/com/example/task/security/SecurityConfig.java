@@ -32,6 +32,7 @@ public class SecurityConfig {
 
                         .requestMatchers("/users/me").authenticated()
 
+                        .requestMatchers("/teams/**").authenticated()
                         .requestMatchers("/tasks/**").authenticated()
                         .requestMatchers("/categories/**").authenticated()
                         .requestMatchers("/projects/**").authenticated()

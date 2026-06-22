@@ -3,6 +3,13 @@ package com.example.task.activitylog.entities;
 public enum ActivityAction {
     USER_REGISTERED,
 
+    TEAM_CREATED,
+    TEAM_UPDATED,
+    TEAM_DELETED,
+    TEAM_MEMBER_ADDED,
+    TEAM_MEMBER_REMOVED,
+    TEAM_MEMBER_ROLE_UPDATED,
+
     CATEGORY_CREATED,
     CATEGORY_UPDATED,
     CATEGORY_DELETED,
