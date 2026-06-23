@@ -51,22 +51,24 @@ public class ProjectService {
         this.activityLogService = activityLogService;
     }
 
-    public List<ProjectResponse> getProjects(Long teamId) {
-        User currentUser = getCurrentUser();
+public List<ProjectResponse> getProjects(Long teamId) {
+    User currentUser = getCurrentUser();
 
-        if (teamId == null) {
-            ValidationErrors errors = new ValidationErrors();
-            errors.addError("teamId", "Team ID is required");
-            throw BadRequestException.from(errors);
-        }
-
-        getMembershipOrThrow(teamId, currentUser.getEmail());
-
-        return projectRepository.findByTeamIdOrderByNameAsc(teamId)
+    if (teamId == null) {
+        return teamMemberRepository.findByUser_EmailIgnoreCaseOrderByTeam_NameAsc(currentUser.getEmail())
                 .stream()
+                .flatMap(member -> projectRepository.findByTeamIdOrderByNameAsc(member.getTeam().getId()).stream())
                 .map(this::toResponse)
                 .toList();
     }
+
+    getMembershipOrThrow(teamId, currentUser.getEmail());
+
+    return projectRepository.findByTeamIdOrderByNameAsc(teamId)
+            .stream()
+            .map(this::toResponse)
+            .toList();
+}
 
     public PageResponse<ProjectResponse> getProjectsPaged(Long teamId, Integer page, Integer size) {
         User currentUser = getCurrentUser();
